@@ -1,0 +1,362 @@
+---
+title: "Projeto - Ciência de Dados I"
+author: "Costa,Pamela; Muniz,Isabella; Bini,Aline"
+date: "11/06/2021"
+output: html_document
+---
+
+ ---------<>--------- 
+
+# PROJETO FINAL: CIENCIA DE DADOS I - FASE 1 #
+
+ ---------<>--------- 
+
+ 1. INTRODUÇÃO:
+
+ Definindo o Problema de Negócio: Estudar bases de dados relacionadas a passagem de pacientes por um Hospital, entendendo o comportamento e os fatores relevantes.
+
+ 2. OBJETIVO:
+
+ Descrever o comportamento dos pacientes que frequentam um Hospital a partir de bases de dados relacionada a passagem, analisar todo o contexto de forma descritiva levantando insights e observações.
+
+ 3. BASE DE DADOS:
+
+ Baseado em dados anonimizados da passagem de um paciente em um grande hospital, o dataset “dataset_2uz.csv” contém 2185 observações e 10 variáveis. Complementamos a análise com um dataset secundário "dataset_raw.xlsx - dataset_raw_vA.cs" contendo dados de localidade dos pacientes que tiveram passagens e tempo de permanencia no hospital, contendo as mesmas 2185 observações e 3 variáveis, a granularidade em ambas a base é a passagem do paciente pelo Hospital.
+
+ 4. PIPELINE DO PROJETO:
+
+![Figura.01: Pipeline da Análise dos Dados](C:\Users\pamgc\OneDrive\Documentos\Base de Dados\Capturar.JPG)
+
+ ---------<>--------- 
+
+ 5. DESENVOLVIMENTO:
+
+ Definindo o diretório de trabalho e o ambiente de produção.)
+
+```{r}
+getwd()
+#setwd()
+function (...) 
+.rs.callAs(name, hook, original, ...)
+
+```
+ ---------<>--------- 
+
+ Carregar o dataset
+
+ ---------<>--------- 
+
+ Como normalmente ainda não se tem conhecimento prévio sobre o que cada atributo 
+ significa para o problema de negócio, vamos dar preferência para importá-los sem 
+ nenhum tipo de conversão automática (stringsAsFactors = FALSE). Garanta também a 
+ informação sobre se o dataset possui ou não cabeçalho (header = TRUE/FALSE).
+
+ DATASET PRINCIPAL
+
+```{r}
+
+df <- read.csv("dataset_2uz.csv", 
+               header = TRUE, 
+               sep = ";", 
+               encoding = "latin1",
+               stringsAsFactors = FALSE)
+View(df)
+
+str(df)
+
+head(df)
+
+```
+
+DATASET COMPLEMENTAR
+
+```{r}
+
+dfC <- read.csv("dataset_raw.xlsx - dataset_raw_vA.csv", 
+               header = TRUE, 
+               sep = ",", 
+               encoding = "latin1",
+               stringsAsFactors = FALSE)
+View(dfC)
+
+str(dfC)
+
+head(dfC)
+
+```
+
+ ---------<>--------- 
+
+ Data Wrangling
+
+ ---------<>--------- 
+
+ Verificar a existência de dados nulos.
+
+ Para isso vamos usar a função "is.na": retorna “TRUE” se houver valor nulo (“na”) 
+                                        retorna “FALSE” se não houver.
+
+```{r}
+#is.na(df) # (!) difícil constatação (!)
+```
+ Vamos aplicar a função "sum()" em conjunto com a função "is.na()" para retornar a 
+ soma dos casos TRUE (TRUE tem valor 1 e FALSE tem valor 0).
+
+```{r}
+sum(is.na(dfC)) #o resultado igual a "0" (zero), confirma-se que não temos valores nulos no dataset.
+```
+
+
+```{r}
+sum(is.na(df)) #o resultado igual a "0" (zero), confirma-se que não temos valores nulos no dataset.
+```
+ Função "summary()" verifica algumas medidas descritivas, possibilitando assim as primeiras inferências e algumas conclusões sobre os atributos.
+
+ OBSERVAÇÕES: 
+
+ 1. Na variável sexo temos valores categóricos 1 e 0, sendo 1 (feminino) e 0 (masculino), a média um pouco acima de 1,5 indica um pequeno desbalanceamento;
+ 2. A variável código CID e grupodiagnóstivo são do tipo caracter e estão 100% preenchidas (possuem valor para todas as observações);
+ 3. Na variável idade notamos a idade mínima de 9 anos e a idade máxima é 94 anos, sendo assim podemos descatar atendimentos pediátricos e neonatal;
+ 4. A variável dias da semana mapeaiam todos os dias de dom(1) a sab(2), a média e a distribuição dos quartis indicam a diferença em proporção de alguns dias;
+ 5. A variável dia, mes e season mapeaiam todo o calendário apresentando também um grau de desbalanceamento;
+ 6. Na variável ano podemos notar pelo mínimo e máximo que a amostra em análise cobre o ano de 2000 até 2016;
+ 7. A variável internação é categórica binária, sendo 1 (internou) e 0 (não internou) e pela média é possível observar um grande desbalanceamento entre as classes.
+ 8. Do dataset complementar as variáveis cidade e estados são categóricas e a variável permanencia em dias é numérica e indica que esses pacientes possuem uma passagem de no máximo 1 dia.
+
+```{r}
+summary(df)
+```
+
+
+```{r}
+summary(dfC)
+```
+ Entendimento dos Atributos de Interesse
+
+(Sexo)
+
+ OBSERVAÇÕES: Análisando os valores de frequencia e o gráfico gerado vemos que o sexo masculino é mais frequente nos atendimento do que o sexo feminino, representando 53,18% das observações.
+
+ Tipo de Variável: Qualitativa Nominal 
+
+```{r}
+#Frequencia absoluta
+table(df$sexo) 
+
+#Frequencia relativa
+prop.table(table(df$sexo))
+
+# Bar Plots
+
+barplot(table(df$sexo))
+```
+(codcid)
+
+ OBSERVAÇÕES: Analisando a tabela de frequência o gráfico plotado vemos que o código do CID é um fator muito disperso, ou seja, possui valores quase que exclusivos por observação
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$codcid) 
+
+#Frequencia relativa
+prop.table(table(df$codcid))
+
+# Bar Plots
+
+barplot(table(df$codcid))
+```
+(grupodiagnostico)
+
+ OBSERVAÇÕES: Analisando a tabela de frequencia e o gráfico plotado vemos que temos quatro classificações de diagnósticos com maior frequencia, sendo que dois a uma classificação genérica, uma como "Não informado" e outra como "outros".
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$grupodiagnostico) 
+
+#Frequencia relativa
+prop.table(table(df$grupodiagnostico))
+
+# Plots
+barplot(table(df$grupodiagnostico))
+
+```
+(idade)
+
+ OBSERVAÇÕES: Pelo plot do gráfico é possivel observar dois picos de concentração de dados, sendoum aos 49 anos e outro em 59.
+
+ Tipo de Variável: Quantitativa Discreta
+
+```{r}
+#Frequencia absoluta
+table(df$idade) 
+
+#Frequencia relativa
+prop.table(table(df$idade))
+
+# Bar Plots
+barplot(table(df$idade))
+
+library(ggplot2)
+ggplot(df, aes(x=idade))+
+  geom_boxplot() 
+
+```
+(diadasemana)
+
+ OBSERVAÇÕES: Observace menor frequencia de atendimento no final de semana e o maior atendimento no meio da semana. 
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$diadasemana) 
+
+#Frequencia relativa
+prop.table(table(df$diadasemana))
+
+# Bar Plots
+barplot(table(df$diadasemana))
+```
+(dia)
+
+ OBSERVAÇÕES: A distribuição em dias do mês é bem distribuido, sem picos discrepantes.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$dia) 
+
+#Frequencia relativa
+prop.table(table(df$dia))
+
+# Bar Plots
+barplot(table(df$dia))
+```
+(mes)
+
+ OBSERVAÇÕES: Observa-se uma maior frequencia no mês de março, podendo refletir fatores culturais e ambientais.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$mes) 
+
+#Frequencia relativa
+prop.table(table(df$mes))
+
+# Bar Plots
+barplot(table(df$mes))
+```
+(ano)
+
+ OBSERVAÇÕES: Observa-se uma crescente de atendimento com o passar dos anos e uma queda em 2016 que pode representar a amostra incompleta neste ano.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$ano) 
+
+#Frequencia relativa
+prop.table(table(df$ano))
+
+# Bar Plots
+barplot(table(df$ano))
+```
+(season)
+
+ OBSERVAÇÕES: Similar a distriuição mensal a distribuição trimestral reflete o comportamento.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$season) 
+
+#Frequencia relativa
+prop.table(table(df$season))
+
+# Bar Plots
+barplot(table(df$season))
+```
+(internacao)
+
+ OBSERVAÇÕES: Analisando a tabela de frequencia e o grafico plotado vemos um comportamente esperado, onde existe muitas passagens que não converte em internação e uma pequena parcela que converte em interação, astante desalanceado.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(df$internacao)
+
+#Frequencia relativa
+prop.table(table(df$internacao))
+
+# Bar Plots
+barplot(table(df$internacao))
+```
+
+ COMPLEMENTO DO ENTENDIMENTO DO PROLEMA DE NEGÓCIO
+
+ Utilizando o dataset complementar para captar medidas adicionais sobre o problema de negócio.
+
+(cidade)
+
+ OBSERVAÇÕES: Cidade atual do paciente objeto da passagem, logo observamos que a cidade de São Paulo possui o maior numero de passagens.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(dfC$cidade)
+
+#Frequencia relativa
+prop.table(table(dfC$cidade))
+
+# Bar Plots
+barplot(table(dfC$cidade))
+```
+
+(estado)
+
+ OBSERVAÇÕES: Cidade atual do paciente objeto da passagem, logo observamos que a cidade SP possui o maior numero de passagens. O que corresponde com a localização do Hospital.
+
+ Tipo de Variável: Qualitativa Nominal
+
+```{r}
+#Frequencia absoluta
+table(dfC$estado)
+
+#Frequencia relativa
+prop.table(table(dfC$estado))
+
+# Bar Plots
+barplot(table(dfC$estado))
+```
+
+(permanencia)
+
+ OBSERVAÇÕES: Observamos que o tempo médio de permanencia no hospital é 0,3754579 dias, ou seja, 9.010989 horas.
+
+ Tipo de Variável: Quantitativa Continua
+
+```{r}
+colunanumerica <- as.numeric(sub(",", ".", dfC$permanencia.dias.))
+
+x = mean(colunanumerica)
+
+cat(x, "Dias", " ") #Dias
+
+y = x*24
+
+cat(y, "Horas") #Horas
+
+```
+
+
